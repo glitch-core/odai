@@ -36,10 +36,14 @@
         }
 
         #game-box {
-            width: 90vw;  /* 90% of the viewport width */
-            height: 90vw; /* Keeps the height proportional to the width */
-            max-width: 500px;  /* Max width is 500px */
-            max-height: 500px; /* Max height is 500px */
+            width: 90vw;
+            /* 90% of the viewport width */
+            height: 90vw;
+            /* Keeps the height proportional to the width */
+            max-width: 500px;
+            /* Max width is 500px */
+            max-height: 500px;
+            /* Max height is 500px */
             position: relative;
             overflow: hidden;
             border-style: inset;
@@ -103,6 +107,31 @@
         let playerX = 200;
         const playerSpeed = 30;
         let score = 0;
+        let tiltEnabled = false;
+
+        // Check if device orientation is supported
+        function checkOrientationPermission() {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(response => {
+                        if (response === 'granted') {
+                            tiltEnabled = true;
+                        } else {
+                            alert("Device orientation permissions denied. Tilt controls will be unavailable.");
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                tiltEnabled = true; // Enable tilt controls if permission isn't needed
+            }
+        }
+
+        // Request permission on page load
+        if (window.DeviceOrientationEvent) {
+            checkOrientationPermission();
+        } else {
+            tiltEnabled = true; // Enable tilt controls if orientation is natively supported
+        }
 
         // Desktop keyboard controls
         document.addEventListener("keydown", function (e) {
@@ -116,16 +145,17 @@
 
         // Mobile tilt controls
         window.addEventListener("deviceorientation", function (e) {
-            const gamma = e.gamma; // Left/right tilt
-
-            if (gamma < -5) {
-                // Tilt left
-                playerX = Math.max(0, playerX - 5);
-            } else if (gamma > 5) {
-                // Tilt right
-                playerX = Math.min(gameBox.clientWidth - player.clientWidth, playerX + 5);
+            if (tiltEnabled) {
+                const gamma = e.gamma; // Left/right tilt
+                if (gamma < -5) {
+                    // Tilt left
+                    playerX = Math.max(0, playerX - 5);
+                } else if (gamma > 5) {
+                    // Tilt right
+                    playerX = Math.min(gameBox.clientWidth - player.clientWidth, playerX + 5);
+                }
+                player.style.left = playerX + "px";
             }
-            player.style.left = playerX + "px";
         });
 
         function spawnCoin() {
