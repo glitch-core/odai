@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Collector</title>
+    <style>
+        #container {
+            display: grid;
+            grid-template-rows: 50px 1fr 50px;
+            vertical-align: middle;
+        }
+
+        #stats {
+            /* background-color: lightcoral; */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        #title {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        #game-box-container {
+            background-color: lightsalmon;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            border-radius: 100%;
+        }
+
+        #game-box {
+            background-color: rgb(173, 173, 173);
+            border-style: inset;
+            border-color: black;
+            border-width: 5px;
+            border-radius: 10px;
+            width: 500px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #player {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            transition: left 0.05s;
+            bottom: 10px;
+            left: 200px;
+        }
+
+        #score-h2 {
+            font-size: 50px;
+            font-family: monospace;
+        }
+
+        #score {
+            padding-left: 10px;
+            font-size: 50px;
+            font-family: monospace;
+        }
+
+        .coin {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <main id="container">
+        <div id="stats">
+            <h2 id="score-h2">Score:</h2>
+            <span id="score">00</span>
+        </div>
+
+        <div id="game-box-container">
+            <div id="game-box">
+                <img id="player" src="face.png" alt="Player">
+                <img class="coin" src="documents.png" alt="Coin" style="display: none;">
+            </div>
+        </div>
+
+        <div id="title">
+            <h2>ODAI-DOCUMENT</h2>
+        </div>
+
+    </main>
+
+    <script>
+        const gameBox = document.getElementById("game-box");
+        const player = document.getElementById("player");
+        const scoreDisplay = document.getElementById("score");
+
+        let playerX = 200;
+        const playerSpeed = 30;
+        let score = 0;
+
+        // Desktop keyboard controls
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "ArrowLeft") {
+                playerX = Math.max(0, playerX - playerSpeed);
+            } else if (e.key === "ArrowRight") {
+                playerX = Math.min(gameBox.clientWidth - player.clientWidth, playerX + playerSpeed);
+            }
+            player.style.left = playerX + "px";
+        });
+
+        // Mobile tilt controls
+        window.addEventListener("deviceorientation", function (e) {
+            const gamma = e.gamma; // Left/right tilt
+
+            if (gamma < -5) {
+                // Tilt left
+                playerX = Math.max(0, playerX - 5);
+            } else if (gamma > 5) {
+                // Tilt right
+                playerX = Math.min(gameBox.clientWidth - player.clientWidth, playerX + 5);
+            }
+            player.style.left = playerX + "px";
+        });
+
+        function spawnCoin() {
+            const coin = document.createElement("img");
+            coin.src = "documents.png"; // Replace with coin.png if needed
+            coin.className = "coin";
+
+            const coinX = Math.floor(Math.random() * (gameBox.clientWidth - 50));
+            coin.style.left = coinX + "px";
+            gameBox.appendChild(coin);
+
+            let coinY = 0;
+            const fallSpeed = 3;
+
+            const fallInterval = setInterval(() => {
+                coinY += fallSpeed;
+                coin.style.top = coinY + "px";
+
+                const playerRect = player.getBoundingClientRect();
+                const coinRect = coin.getBoundingClientRect();
+
+                if (
+                    coinRect.bottom >= playerRect.top &&
+                    coinRect.left < playerRect.right &&
+                    coinRect.right > playerRect.left
+                ) {
+                    clearInterval(fallInterval);
+                    gameBox.removeChild(coin);
+                    score++;
+                    scoreDisplay.textContent = score.toString().padStart(2, "0");
+                }
+
+                if (coinY > gameBox.clientHeight) {
+                    clearInterval(fallInterval);
+                    if (gameBox.contains(coin)) {
+                        gameBox.removeChild(coin);
+                    }
+                }
+            }, 10);
+        }
+
+        setInterval(spawnCoin, 2000);
+    </script>
+</body>
+
+</html>
